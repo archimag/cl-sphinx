@@ -1,33 +1,30 @@
-.. _installation:
-
-Installation
-============
+Dowload and Installation
+========================
 
 Implementation-specific notes
 -----------------------------
 
-cl-libxml2 tested with sbcl and clisp on Gentoo Linux (with use gentoo-lisp-overlay).
+`cl-libxml2`_ tested with sbcl and clisp on Gentoo Linux (with use gentoo-lisp-overlay).
 
 Requirements
 ------------
 
-cl-libxml2 needs:
+`cl-libxml2`_ needs:
 
-* libxml2
-* libxslt (optional, necessary for xslt support)
-* cffi (=> 0.10.2)
-* lift (optional, for tests)
-* puri
-* iterate
-* flexi-streams
-* metabang-bind
-* garbage-pools (=> 0.1.1)
+* `libxml2`_
+* `libxslt`_ (optional, necessary for xslt support)
+* `cffi`_ (=> 0.10.2)
+* `lift`_ (optional, for tests)
+* `puri`_
+* `iterate`_
+* `flexi-streams`_
+* `metabang-bind`_
+* `garbage-pools`_ (=> 0.1.1)
 
 Download
 --------
 
-| Download tarballs 
-| Or get it from git:
+Download `tarballs`_ or get it from git:
 ::
 
   $ git clone git://github.com/archimag/cl-libxml2.git
@@ -98,3 +95,17 @@ Run tests for xfactory system:
 
   (asdf:operate 'asdf:test-op :xfactory)
 
+.. _cl-libxml2: http://code.google.com/p/cl-libxml2/
+
+.. _libxml2: http://www.xmlsoft.org/
+.. _libxslt: http://www.xmlsoft.org/XSLT/
+.. _cxml-stp: http://www.lichteblau.com/cxml-stp/
+.. _iterate: http://common-lisp.net/project/iterate/
+.. _cffi: http://common-lisp.net/project/cffi/
+.. _lift: http://common-lisp.net/project/lift/
+.. _puri: http://puri.b9.com/
+.. _flexi-streams: http://www.weitz.de/flexi-streams/
+.. _metabang-bind: http://common-lisp.net/project/metabang-bind
+.. _garbage-pools: http://code.google.com/p/garbage-pools/
+
+.. _tarballs: http://cl-libxml2.googlecode.com/files/cl-libxml2-latest.tar.bz2

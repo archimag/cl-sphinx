@@ -1,0 +1,59 @@
+========
+Versions
+========
+
+Version 0.1.1
+-------------
+
+:Date:     2009.12.30
+:Download: http://common-lisp.net/project/cl-gtk2/files/cl-gtk2-0.1.1.tar.gz
+
+* Add bindings:
+
+  * PangoUnderline, PangoDirection, Gdk-Pango integration, rest of Gdk-Cairo integration
+  * gdk:pixbuf-new-from-file
+  * gtk:widget-intersect-region
+  * GdkDisplay, GdkDisplayManager, GdkScreen, GdkDevice,
+  * GdkRegion, GdkGC, GdkDrawable, GdkPixmap, GdkImage, GdkPixbuf, drawing primitives
+  * GdkColormap, GdkColor, Gdk Visual
+  * GdkWindow
+  * GdkKeymap
+  * GdkSelection
+  * Gdk drag and drop
+  * Gdk threading
+  * GdkEvent-related functions
+  * Launching application with Gdk
+
+* Add gobject:copy-boxed-slots-to-foreign, gobject:with-boxed-foreign-array
+
+* Add gobject:get-g-type-definition function
+
+* Bug fixes:
+
+  * Use closer-mop's CLOSER-COMMON-LISP package in GOBJECT package definition to remove symbol conflicts
+  * Some bad threading behavior due to gtk-main not acquiring Gdk thread lock before calling gtk_main
+  * glib: return NIL when g-object foreign type with :already-referenced receives null pointer
+  * Correct type of pointer slot of g-object class
+  * Fix definition of gdk-pixbuf-get-from-drawable
+  * Fix calling of resize function for gl-drawing-area
+  * Fix reinitialization of gobject classes
+  * Fix typo in GSList foreign type conversion
+  * Fix gtkglext:with-gl-context macro by wrapping body in progn inside unwind-protect
+  * Add signalling of errors in gtk:ui-manager-load-from-file and gtk:ui-manager-load-from-string
+  * Fix typo in gdk_region_is_empty definition
+  * Prevent timer from disabling by returning T in callback
+  * Export gtk:widget-hide
+  * Fix typos in GtkTreeModel implementation
+  * Ensure that Gtk+ foreign libraries are defined and loaded at image startup before they are used
+  * Fix tracking of 'realized' state of gtkglext:gl-drawing-area (thanks to Vitaly Mayatskikh)
+  * Correct type definition for GdkNativeWindow when running on Microsoft Windows
+  * Ensure that type initializer for GtkTextIter is called at startup
+  * Fix definition of foreign C structure for GtkWidget
+
+Version 0.1 
+-----------
+
+:Date: 2009.10.24
+:Download: http://common-lisp.net/project/cl-gtk2/files/cl-gtk2-0.1.tar.gz
+
+Initial release

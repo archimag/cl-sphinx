@@ -8,4 +8,5 @@ cl-libxml2 documentation contents
 
    index
    install
-
+   quickstart
+   examples

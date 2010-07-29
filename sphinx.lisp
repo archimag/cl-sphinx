@@ -21,28 +21,34 @@
   (alexandria:flatten (iter (for child in (tree-document-childs doc))
                             (collect (tree-documment-all-childs child)))))
 
+(defun static-href (name)
+  (format nil "_static/~A" name))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; transformations
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (defclass resolve-image (docutils:transform)
-;;   ()
-;;   (:default-initargs :priority 850)
-;;   (:documentation "Resolve image dependancies"))
+(defclass resolve-static-files (docutils:transform)
+  ()
+  (:default-initargs :priority 850)
+  (:documentation "Resolve image dependancies"))
 
-;; (defmethod docutils:transform ((transform resolve-image))
-;;   (let ((document (docutils:document (docutils:node transform))))
-;;     (when (docutils:setting :resolve-media document)
-;;       (docutils:with-nodes (node document)
-;;         (typecase node
-;;           (docutils.nodes:image
-;;            (let ((uri (docutils:attribute node :uri)))
-;;              (if (fad:file-exists-p (merge-pathnames uri *acliki-image-dir*))
-;;                  (setf (docutils:attribute node :uri)
-;;                        (format nil "/image/~A" uri))
-;;                  (docutils:report :warning
-;;                                   (list "Media uri ~S is either relative or the media file was not found." uri)
-;;                                   :node node)))))))))
+(defmethod docutils:transform ((transform resolve-static-files))
+  (let ((document (docutils:document (docutils:node transform))))
+    (when (docutils:setting :resolve-media document)
+      (docutils:with-nodes (node document)
+        (typecase node
+          (docutils.nodes:image
+           (setf (docutils:attribute node :uri)
+                 (static-href (docutils:attribute node :uri)))))))))
+           
+           ;; (let ((uri (docutils:attribute node :uri)))
+           ;;   (if (fad:file-exists-p (merge-pathnames uri *acliki-image-dir*))
+           ;;       (setf (docutils:attribute node :uri)
+           ;;             (resource-href uri))
+           ;;       (docutils:report :warning
+           ;;                        (list "Media uri ~S is either relative or the media file was not found." uri)
+           ;;                        :node node)))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; toctree
@@ -116,40 +122,87 @@
 (defclass tree-reader (docutils.parser.rst:rst-reader) ())
 
 (defmethod docutils:transforms ((reader tree-reader))
-  (remove 'docutils.transform:resolve-media
-                  (call-next-method)))
-
-  ;; (append (remove 'docutils.transform:resolve-media
-  ;;                 (call-next-method))
-  ;;         '(resolve-image)))
+  (append (remove 'docutils.transform:resolve-media
+                  (call-next-method))
+          '(resolve-static-files)))
 
 (defmethod docutils:read-document (source (reader tree-reader))
   (let ((doc (change-class (call-next-method) 'tree-document)))
     (setf (tree-document-childs doc)
           (iter (for child in (tree-document-childs doc))
-                (collect (docutils:read-document (merge-pathnames child
-                                                                  (docutils:setting :source-path doc))
-                                                 (make-instance 'tree-reader)
-                                                 ))))
+                (unless (string= child "")
+                  (collect (docutils:read-document (merge-pathnames child
+                                                                    (docutils:setting :source-path doc))
+                                                   (make-instance 'tree-reader))))))
     doc))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; make-documentation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun read-document-tree (contents)
-  (docutils:read-document contents (make-instance 'tree-reader)))
+(defvar *root*)
+
+(defun make-contents-plist (doc)
+  (iter (for child in (tree-document-childs doc))
+        (collect (list :href (format nil 
+                                     "~A.html" 
+                                     (pathname-name (docutils:setting :source-path child)))
+                       :title (docutils:attribute child :name)
+                       :childs (make-contents-plist child)))))
+
+
+(defun compile-template (path)
+  (let ((closure-template:*default-translate-package* (closure-template:make-template-package (gensym)))
+        (closure-template.parser.expression::*possible-functions* (cons "staticHref"
+                                                                        closure-template.parser.expression::*possible-functions*)))
+    (import 'static-href closure-template:*default-translate-package*)
+    (unwind-protect
+         (eval (cons 'lambda
+                     (cddr (closure-template:translate-template
+                            :common-lisp-backend
+                            (format nil 
+                                    "{template finalizePage}~A{/template}"
+                                    (alexandria:read-file-into-string (merge-pathnames "_static/template.tmpl"
+                                                                                       path)))))))
+      (delete-package closure-template:*default-translate-package*))))
+
+(defun write-html (doc path template contents)
+  (let ((content (funcall template
+                          (list :title (docutils:attribute doc :name)
+                                :contents contents
+                                :content (let ((writer (make-instance 'docutils.writer.html:html-writer)))
+                                           (docutils:visit-node writer doc)
+                                           (with-output-to-string (out)
+                                             (iter (for part in  '(docutils.writer.html:body-pre-docinfo 
+                                                                   docutils.writer.html:docinfo
+                                                                   docutils.writer.html:body))
+                                                   (docutils:write-part writer part out))))))))
+  (alexandria:write-string-into-file content
+                                     path
+                                     :if-exists :supersede
+                                     :if-does-not-exist :create)))
+
 
 (defun make-documentation (contents target-dir)  
   (let* ((root (docutils:read-document contents (make-instance 'tree-reader)))
          (root-path (docutils:setting :source-path root))
-         (target (ensure-directories-exist (fad:pathname-as-directory target-dir))))
+         (target (ensure-directories-exist (fad:pathname-as-directory target-dir)))
+         (contents (make-contents-plist root))
+         (template (compile-template root-path)))
     (flet ((target-pahtname (orig)
              (ensure-directories-exist (merge-pathnames (enough-namestring orig root-path)
                                                         target))))
-      (iter (for doc in (cons root (tree-document-childs root)))
-            (docutils:write-html (make-pathname :type "html"
+      (iter (for doc in (cons root (tree-document-childs root))) 
+            (write-html doc
+                        (make-pathname :type "html"
                                                 :defaults (target-pahtname (docutils:setting :source-path doc)))
-                                 doc))
+                        template
+                        contents))
       (fad:walk-directory (make-pathname :directory (pathname-directory (merge-pathnames "_static/" root-path)))
                           #'(lambda (f)
-                              (fad:copy-file f (target-pahtname f)))))))
-
-
+                              (unless (string= "template.tmpl"
+                                               (format nil
+                                                       "~A.~A"
+                                                       (pathname-name f)
+                                                       (pathname-type f)))
+                                (fad:copy-file f (target-pahtname f) :overwrite t)))))))

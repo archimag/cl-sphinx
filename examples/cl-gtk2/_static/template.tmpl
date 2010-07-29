@@ -1,0 +1,38 @@
+// -*- mode: closure-template-html -*-
+
+<html>
+	<head>
+      	<meta http-equiv="Content-Type" content="text/html; charset='utf-8'" />
+
+        <title>{$title}</title>
+
+        <link rel="stylesheet" type="text/css" href="{staticHref('style.css')}" />
+        <link rel="stylesheet" type="text/css" href="{staticHref('colorize.css')}" />
+	</head>
+
+	<body>
+        <div class="header"> 
+            <span>CL-GTK2 &mdash; a Common Lisp binding for Gtk+</span> 
+        </div>
+
+        <div class="navigation"> 
+            <ul> 
+                {foreach $item in $contents}
+                    <li>
+                        {if $item.href}
+                            <a href="{$item.href}">{$item.title}</a>
+                        {else}
+                            <strong>{$item.title}</strong>
+                        {/if}
+
+                    </li>
+                {/foreach}
+            </ul> 
+        </div> 
+
+        <div class="content">
+            {$content |noAutoescape}
+        </div>
+    </body>
+</html>
+

@@ -1,0 +1,42 @@
+// -*- mode: closure-template-html -*-
+
+<html>
+	<head>
+      	<meta http-equiv="Content-Type" content="text/html; charset='utf-8'" />
+
+        <title>{$title}</title>
+
+        <link rel="stylesheet" type="text/css" href="{staticHref('style.css')}" />
+        <link rel="stylesheet" type="text/css" href="{staticHref('colorize.css')}" />
+	</head>
+
+	<body>
+        <div id="page-title">
+            <h1>CL-LIBXML2</h1>
+            <b>high-level wrapper around libxml2 and libxslt libraries</b>
+        </div>
+
+        <div id="rightmenu">
+            <ul>
+                {foreach $item in $contents}
+                    <li>
+                        {if $item.href}
+                            <a href="{$item.href}">{$item.title}</a>
+                        {else}
+                            <strong>{$item.title}</strong>
+                        {/if}
+
+                    </li>
+                {/foreach}
+            </ul>
+        </div>
+
+        <img src="{staticHref('lisplogo_flag2_128.png')}" id="logo" />
+
+        
+        <div id="content">
+            {$content |noAutoescape}
+        </div>
+    </body>
+</html>
+

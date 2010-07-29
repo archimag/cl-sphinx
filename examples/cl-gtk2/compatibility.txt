@@ -1,0 +1,28 @@
+=============
+Compatibility
+=============
+
+CL-GTK2 requires features from Common Lisp implementations that are beyound ANSI standard. Namely:
+
+* FFI with callbacks (via CFFI)
+* Threading (via Bordeaux-Threads)
+* Weak references (weak hash-tables) and finalizers (via Trivial-Garbage)
+* CLOS Metaobject Protocol (via Closer-MOP)
+
+Exact version requirements are written in the :ref:`Installation <installation>` page.
+
+CL-GTK2 was tested on following combinations of operating systems and lisp implementations:
+
+* `SBCL`_-1.0.28 on Gentoo Linux x86-64
+* `SBCL`_-1.0.18 on Ubuntu Linux x86
+* `SBCL`_-1.0.29 on Microsoft Windows XP x86
+* `Clozure CL`_-1.4 on Gentoo Linux x86-64
+* `Clozure CL`_-1.4 on Microsoft Windows XP x86
+
+CL-GTK2 at this time works on Linux and Windows, on SBCL and Clozure CL
+(starting from version 1.4 of Clozure CL). It should be quite easily
+portable to other operating systems.
+
+
+.. _SBCL: http://www.sbcl.org/
+.. _Clozure CL: http://trac.clozure.com/openmcl

@@ -1,0 +1,6 @@
+Manual
+======
+
+The manual is still under construction, you may see the current draft version.
+
+The preliminary version of manual for GObject part of binding is available here.

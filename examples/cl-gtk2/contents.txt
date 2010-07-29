@@ -1,0 +1,16 @@
+.. _contents:
+
+cl-gtk2 documentation contents
+==============================
+
+.. toctree::
+   :maxdepth: 1
+
+   index
+   compatibility
+   installation
+   versions
+   examples
+   tutorial
+   manual
+

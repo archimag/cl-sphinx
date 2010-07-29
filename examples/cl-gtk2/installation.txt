@@ -1,0 +1,73 @@
+============
+Installation
+============
+
+Before installing CL-GTK2, install its dependencies. CL-GTK2 has the following
+dependencies (note that versions are required; CL-GTK2 uses features that 
+became available in these versions and would not work with older versions):
+
+* `CFFI`_ (version >= 0.10.4)
+* `Trivial-Garbage`_ (version >= 0.18)
+* `Iterate`_ (version >= 1.4.3)
+* `Bordeaux-Threads`_ (version >= 0.6.0)
+* `Closer-MOP`_ (version >= 0.55)
+* `cl-opengl`_ (if you intend to use cl-gtk2-gtkglext)
+* `cl-cairo2`_ (if you intend to use cl-gtk2-cairo)
+
+CL-GTK2 requires Gtk+ version >= 2.16.
+
+At first, source code should be downloaded. Current version of CL-GTK2 can be downloaded from
+`http://common-lisp.net/project/cl-gtk2/files/cl-gtk2-0.1.1.tar.gz`_.
+
+Development tree of CL-GTK2 can be cloned with `Git`_: 
+::
+
+  git clone git://repo.or.cz/cl-gtk2.git
+
+or, using the mirror: 
+::
+
+  git clone git://github.com/dmitryvk/cl-gtk2.git
+
+To install CL-GTK2, unpack the CL-GTK2 sources, and add them to asdf:*central-registry*: 
+::
+
+  (push "/path/to/cl-gtk2/glib/" asdf:*central-registry*)
+  (push "/path/to/cl-gtk2/pango/" asdf:*central-registry*)
+  (push "/path/to/cl-gtk2/gdk/" asdf:*central-registry*)
+  (push "/path/to/cl-gtk2/gtk/" asdf:*central-registry*)
+  (push "/path/to/cl-gtk2/gtk-glext/" asdf:*central-registry*)
+  (push "/path/to/cl-gtk2/cairo/" asdf:*central-registry*)
+
+or create symlinks: 
+::
+
+  cd ~/.sbcl/systems      # or other directory in asdf:*central-registry*
+  ln -s /path/to/cl-gtk2/glib/cl-gtk2-glib.asd .
+  ln -s /path/to/cl-gtk2/pango/cl-gtk2-pango.asd .
+  ln -s /path/to/cl-gtk2/gdk/cl-gtk2-gdk.asd .
+  ln -s /path/to/cl-gtk2/gtk/cl-gtk2-gtk.asd .
+  ln -s /path/to/cl-gtk2/gtkglext/cl-gtk2-gtkglext.asd .
+  ln -s /path/to/cl-gtk2/cairo/cl-gtk2-cairo.asd .
+
+In Gentoo Linux, it is possible to use layman (see `Gentoo Overlays Users' Guide`_) 
+to add lisp and cl-gtk2 overlays that contains neccessary ebuilds: 
+::
+
+  layman -a lisp
+  layman --overlays=http://github.com/dmitryvk/cl-gtk2-overlay/raw/master/layman-list.xml -a cl-gtk2
+  emerge cl-gtk2
+
+.. _CFFI: http://common-lisp.net/project/cffi/
+.. _Trivial-Garbage: http://www.cliki.net/trivial-garbage
+.. _Iterate: http://common-lisp.net/project/iterate/
+.. _Bordeaux-Threads: http://common-lisp.net/project/bordeaux-threads/
+.. _Closer-MOP: http://common-lisp.net/project/closer/closer-mop.html
+.. _cl-opengl: http://common-lisp.net/project/cl-opengl/
+.. _cl-cairo2: http://common-lisp.net/project/cl-cairo2/
+
+.. _http://common-lisp.net/project/cl-gtk2/files/cl-gtk2-0.1.1.tar.gz: http://common-lisp.net/project/cl-gtk2/files/cl-gtk2-0.1.1.tar.gz
+
+.. _Gentoo Overlays Users' Guide: http://www.gentoo.org/proj/en/overlays/userguide.xml
+
+.. _Git: http://git-scm.org/
