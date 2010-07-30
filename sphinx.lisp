@@ -8,21 +8,50 @@
 
 (defpackage #:sphinx
   (:use #:cl #:iter)
-  (:export #:read-document-tree))
+  (:export #:make-documentation))
 
 (in-package #:sphinx)
+
+(defvar *root* nil)
+
+(defvar *current-document* nil)
+
+(defvar *verbose* t)
+
 
 (defclass tree-document (docutils.nodes:document)
   ((prev :initform nil)
    (next :initform nil)
    (childs :initform nil :accessor tree-document-childs)))
 
-(defun tree-documment-all-childs (doc)
+(defmethod docutils::do-transforms ((transforms list) (document tree-document))
+  (let ((*current-document* document))
+    (call-next-method)))
+
+(defun tree-document-all-childs (doc)
   (alexandria:flatten (iter (for child in (tree-document-childs doc))
-                            (collect (tree-documment-all-childs child)))))
+                            (collect child)
+                            (collect (tree-document-all-childs child)))))
+
+
+(defun make-relavive-href (href base)
+  (iter (for i from 0)
+        (for h initially (cdr (pathname-directory href)) then (cdr h))
+        (for b initially (cdr (pathname-directory base)) then (cdr b))
+        (finding (namestring (make-pathname :directory (concatenate 'list
+                                                                    (list :relative)
+                                                                    (make-list (length b) :initial-element :up)
+                                                                    h)
+                                            :name (pathname-name href)
+                                            :type (pathname-type href)))
+                 such-that (not (and (stringp (car h))
+                                     (stringp (car b))
+                                     (string= (car h) (car b)))))))
 
 (defun static-href (name)
-  (format nil "_static/~A" name))
+  (make-relavive-href (format nil "_static/~A" name)
+                      (enough-namestring (docutils:setting :source-path *current-document*)
+                                         (docutils:setting :source-path *root*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; transformations
@@ -83,9 +112,7 @@
     (docutils:add-child node
                         (make-instance 'code-block
                                        :lang lang
-                                       :code (format nil
-                                                     "~{~A~&~}"
-                                                     (coerce content 'list))))
+                                       :code (docutils::join-strings content #\Newline)))
     (docutils:add-child parent node)))
 
 (defmethod docutils:visit-node ((writer docutils.writer.html:html-writer) (node code-block))
@@ -111,7 +138,7 @@
 
 (defmethod docutils:visit-node ((write docutils.writer.html:html-writer) (node inner-reference))
   (docutils:part-append (docutils.writer.html::start-tag node "a"
-                                                         (list :href (inner-reference-href node))))
+                                                         (list :href (format nil "~A.html" (inner-reference-href node)))))
   (docutils:part-append (inner-reference-title node))
   (docutils:part-append "</a>"))
 
@@ -127,6 +154,8 @@
           '(resolve-static-files)))
 
 (defmethod docutils:read-document (source (reader tree-reader))
+  (when *verbose*
+    (format *trace-output* "Read ~A~&" source))
   (let ((doc (change-class (call-next-method) 'tree-document)))
     (setf (tree-document-childs doc)
           (iter (for child in (tree-document-childs doc))
@@ -140,13 +169,16 @@
 ;;; make-documentation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *root*)
-
 (defun make-contents-plist (doc)
   (iter (for child in (tree-document-childs doc))
-        (collect (list :href (format nil 
-                                     "~A.html" 
-                                     (pathname-name (docutils:setting :source-path child)))
+        (collect (list :href (if (not (eql child *current-document*))
+                                 (namestring
+                                  (make-pathname
+                                   :defaults (make-relavive-href (enough-namestring (docutils:setting :source-path child)
+                                                                                    (docutils:setting :source-path *root*))
+                                                                 (enough-namestring (docutils:setting :source-path *current-document*)
+                                                                                    (docutils:setting :source-path *root*)))
+                                   :type "html")))
                        :title (docutils:attribute child :name)
                        :childs (make-contents-plist child)))))
 
@@ -166,38 +198,40 @@
                                                                                        path)))))))
       (delete-package closure-template:*default-translate-package*))))
 
-(defun write-html (doc path template contents)
-  (let ((content (funcall template
-                          (list :title (docutils:attribute doc :name)
-                                :contents contents
-                                :content (let ((writer (make-instance 'docutils.writer.html:html-writer)))
-                                           (docutils:visit-node writer doc)
-                                           (with-output-to-string (out)
-                                             (iter (for part in  '(docutils.writer.html:body-pre-docinfo 
-                                                                   docutils.writer.html:docinfo
-                                                                   docutils.writer.html:body))
-                                                   (docutils:write-part writer part out))))))))
-  (alexandria:write-string-into-file content
-                                     path
-                                     :if-exists :supersede
-                                     :if-does-not-exist :create)))
+(defun write-html (doc path template)
+  (when *verbose*
+    (format *trace-output* "Write ~A~&" path))
+  (let ((*current-document* doc))
+    (let ((content (funcall template
+                            (list :title (docutils:attribute doc :name)
+                                  :contents (make-contents-plist *root*)
+                                  :content (let ((writer (make-instance 'docutils.writer.html:html-writer)))
+                                             (docutils:visit-node writer doc)
+                                             (with-output-to-string (out)
+                                               (iter (for part in  '(docutils.writer.html:body-pre-docinfo 
+                                                                     docutils.writer.html:docinfo
+                                                                     docutils.writer.html:body))
+                                                     (docutils:write-part writer part out))))))))
+      (alexandria:write-string-into-file content
+                                         path
+                                         :if-exists :supersede
+                                         :if-does-not-exist :create))))
 
 
 (defun make-documentation (contents target-dir)  
   (let* ((root (docutils:read-document contents (make-instance 'tree-reader)))
+         (*root* root)
          (root-path (docutils:setting :source-path root))
          (target (ensure-directories-exist (fad:pathname-as-directory target-dir)))
-         (contents (make-contents-plist root))
          (template (compile-template root-path)))
     (flet ((target-pahtname (orig)
              (ensure-directories-exist (merge-pathnames (enough-namestring orig root-path)
                                                         target))))
-      (iter (for doc in (cons root (tree-document-childs root))) 
+      (iter (for doc in (cons root (tree-document-all-childs root))) 
             (write-html doc
                         (make-pathname :type "html"
                                                 :defaults (target-pahtname (docutils:setting :source-path doc)))
-                        template
-                        contents))
+                        template))
       (fad:walk-directory (make-pathname :directory (pathname-directory (merge-pathnames "_static/" root-path)))
                           #'(lambda (f)
                               (unless (string= "template.tmpl"
