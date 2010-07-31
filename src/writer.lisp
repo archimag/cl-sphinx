@@ -49,7 +49,8 @@
                                                (iter (for part in  '(docutils.writer.html:body-pre-docinfo 
                                                                      docutils.writer.html:docinfo
                                                                      docutils.writer.html:body))
-                                                     (docutils:write-part writer part out))))))))
+                                                     (docutils:write-part writer part out))
+                                               (format out "</div>")))))))
       (alexandria:write-string-into-file content
                                          path
                                          :if-exists :supersede

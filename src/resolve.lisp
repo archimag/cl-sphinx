@@ -21,6 +21,10 @@
                                      (stringp (car b))
                                      (string= (car h) (car b)))))))
 
+(defun resolve-doc (doc base)
+  (make-relavive-href (document-path doc)
+                      (document-path base)))
+
 (defun static-href (name)
   (make-relavive-href (format nil "_static/~A" name)
                       (enough-namestring (docutils:setting :source-path *current-document*)
@@ -40,3 +44,4 @@
           (docutils.nodes:image
            (setf (docutils:attribute node :uri)
                  (static-href (docutils:attribute node :uri)))))))))
+

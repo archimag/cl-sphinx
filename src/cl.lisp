@@ -14,8 +14,15 @@
   ((lang :initarg :lang :initform nil :reader code-block-lang)
    (code :initarg :code :initform nil :reader code-block-code)))
 
+(defmethod docutils:visit-node ((writer docutils.writer.html:html-writer) (node code-block))
+  (docutils:part-append (docutils.writer.html::start-tag node
+                                                         "div"
+                                                         '(:class "code")))
+  (docutils:part-append (colorize::html-colorization :common-lisp
+                                                     (code-block-code node)))
+  (docutils:part-append "</div>"))
 
-(docutils.parser.rst:def-directive code-block (parent lang docutils.parser.rst:&content content)
+(docutils.parser.rst:def-directive code-block (parent lang &content content)
   (let ((node (docutils:make-node 'docutils.nodes:paragraph)))
     (docutils:add-child node
                         (make-instance 'code-block
@@ -23,11 +30,6 @@
                                        :code (docutils::join-strings content #\Newline)))
     (docutils:add-child parent node)))
 
-(defmethod docutils:visit-node ((writer docutils.writer.html:html-writer) (node code-block))
-  (docutils:part-append "<div class=\"code\">")
-  (docutils:part-append (colorize::html-colorization :common-lisp
-                                                     (code-block-code node)))
-  (docutils:part-append "</div>"))
 
 ;;;; common-lisp-entity
 

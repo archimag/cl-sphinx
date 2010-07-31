@@ -25,3 +25,9 @@
                             (collect child)
                             (collect (document-childs-recursively child)))))
 
+
+(defun document-name (doc)
+  (docutils:attribute doc :name))
+
+(defun document-path (doc)
+  (docutils:setting :source-path doc))

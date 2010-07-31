@@ -9,8 +9,31 @@
 
 
 (defclass toctree (docutils.nodes:paragraph)
-  ((maxdepth :initarg :maxdepth :initform 1)))
+  ((maxdepth :initarg :maxdepth :initform 1 :reader toctree-maxdepth)))
 
+(defmethod docutils:visit-node ((writer docutils.writer.html:html-writer) (node toctree))
+  (labels ((impl (doc depth)
+             (when (and (> depth 0)
+                        (document-childs doc))
+               (docutils:part-append
+                (docutils.writer.html::start-tag node
+                                                 "ul"
+                                                 '(:class "toctree")))
+               (iter (for child in (document-childs doc))
+                     (docutils:part-append
+                      (docutils.writer.html::start-tag node "li")
+                      (docutils.writer.html::start-tag node
+                                                       "a"
+                                                       (list :href (resolve-doc child
+                                                                                *current-document*)))
+                      (document-name child)
+                      "</a>")
+                     (impl child (1- depth))
+                     (docutils:part-append "</li>"))
+               (docutils:part-append "</ul>"))))
+    (impl *current-document*
+          (toctree-maxdepth node))))
+                                             
 (docutils.parser.rst:def-directive toctree (parent &option maxdepth &content content)
   (unless (typep docutils:*document* 'document)
     (change-class docutils:*document* 'document))
@@ -20,5 +43,5 @@
                      content))
   (docutils:add-child parent
                       (make-instance 'toctree
-                                     :maxdepth maxdepth)))
+                                     :maxdepth (parse-integer maxdepth))))
                               
