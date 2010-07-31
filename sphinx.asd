@@ -8,4 +8,12 @@
 
 (defsystem sphinx
   :depends-on (#:docutils #:closure-template #:cl-fad #:colorize)
-  :components ((:file "sphinx")))
+  :components ((:module "src"
+                        :components ((:file "packages")
+                                     (:file "document" :depends-on ("packages"))
+                                     (:file "toctree" :depends-on ("document"))
+                                     (:file "ref" :depends-on ("document"))
+                                     (:file "resolve" :depends-on ("document"))
+                                     (:file "cl" :depends-on ("packages"))
+                                     (:file "reader" :depends-on ("toctree"))
+                                     (:file "writer" :depends-on ("reader" "resolve" "ref" "cl"))))))
