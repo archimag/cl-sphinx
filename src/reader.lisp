@@ -24,6 +24,6 @@
           (iter (for child in (document-childs doc))
                 (unless (string= child "")
                   (collect (docutils:read-document (merge-pathnames child
-                                                                    (docutils:setting :source-path doc))
+                                                                    (document-path doc))
                                                    (make-instance 'reader))))))
     doc))

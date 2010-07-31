@@ -22,13 +22,14 @@
                                      (string= (car h) (car b)))))))
 
 (defun resolve-doc (doc base)
-  (make-relavive-href (document-path doc)
-                      (document-path base)))
+  (make-pathname :type "html"
+                 :defaults (make-relavive-href (document-path doc)
+                                               (document-path base))))
 
 (defun static-href (name)
   (make-relavive-href (format nil "_static/~A" name)
-                      (enough-namestring (docutils:setting :source-path *current-document*)
-                                         (docutils:setting :source-path *root*))))
+                      (enough-namestring (document-path *current-document*)
+                                         (document-path *root*))))
 
 
 (defclass resolve-static-files (docutils:transform)

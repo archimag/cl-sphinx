@@ -7,20 +7,6 @@
 
 (in-package #:sphinx)
 
-(defun make-contents-plist (doc)
-  (iter (for child in (document-childs doc))
-        (collect (list :href (if (not (eql child *current-document*))
-                                 (namestring
-                                  (make-pathname
-                                   :defaults (make-relavive-href (enough-namestring (docutils:setting :source-path child)
-                                                                                    (docutils:setting :source-path *root*))
-                                                                 (enough-namestring (docutils:setting :source-path *current-document*)
-                                                                                    (docutils:setting :source-path *root*)))
-                                   :type "html")))
-                       :title (docutils:attribute child :name)
-                       :childs (make-contents-plist child)))))
-
-
 (defun compile-template (path)
   (let ((closure-template:*default-translate-package* (closure-template:make-template-package (gensym)))
         (closure-template.parser.expression::*possible-functions* (cons "staticHref"
@@ -36,12 +22,28 @@
                                                                                        path)))))))
       (delete-package closure-template:*default-translate-package*))))
 
+(defun make-contents-plist (doc)
+  (iter (for child in (document-childs doc))
+        (collect (list :href (if (not (eql child *current-document*))
+                                 (namestring
+                                  (make-pathname
+                                   :defaults (make-relavive-href (enough-namestring (document-path child)
+                                                                                    (document-path *root*))
+                                                                 (enough-namestring (document-path *current-document*)
+                                                                                    (document-path *root*)))
+                                   :type "html")))
+                       :title (document-name child)
+                       :childs (make-contents-plist child)))))
+
+
+
+
 (defun write-html (doc path template)
   (when *verbose*
     (format *trace-output* "Write ~A~&" path))
   (let ((*current-document* doc))
     (let ((content (funcall template
-                            (list :title (docutils:attribute doc :name)
+                            (list :title (document-name doc)
                                   :contents (make-contents-plist *root*)
                                   :content (let ((writer (make-instance 'docutils.writer.html:html-writer)))
                                              (docutils:visit-node writer doc)
@@ -60,7 +62,7 @@
 (defun make-documentation (contents target-dir &key verbose)
   (let ((*verbose* verbose))
     (let* ((*root* (docutils:read-document contents (make-instance 'reader)))
-           (root-path (docutils:setting :source-path *root*))
+           (root-path (document-path *root*))
            (target (ensure-directories-exist (fad:pathname-as-directory target-dir)))
            (template (compile-template root-path)))
       (flet ((target-pahtname (orig)
@@ -69,7 +71,7 @@
         (iter (for doc in (cons *root* (document-childs-recursively *root*))) 
               (write-html doc
                           (make-pathname :type "html"
-                                         :defaults (target-pahtname (docutils:setting :source-path doc)))
+                                         :defaults (target-pahtname (document-path doc)))
                           template))
         (fad:walk-directory (make-pathname :directory (pathname-directory (merge-pathnames "_static/" root-path)))
                             #'(lambda (f)
