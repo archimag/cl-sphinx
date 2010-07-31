@@ -60,7 +60,8 @@
 
 
 (defun make-documentation (contents target-dir &key verbose)
-  (let ((*verbose* verbose))
+  (let ((*verbose* verbose)
+        (*inner-reference-map* (make-hash-table :test 'equal)))
     (let* ((*root* (docutils:read-document contents (make-instance 'reader)))
            (root-path (document-path *root*))
            (target (ensure-directories-exist (fad:pathname-as-directory target-dir)))

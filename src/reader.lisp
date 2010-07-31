@@ -12,9 +12,11 @@
 (defclass reader (docutils.parser.rst:rst-reader) ())
 
 (defmethod docutils:transforms ((reader reader))
-  (append (remove 'docutils.transform:resolve-media
-                  (call-next-method))
-          '(resolve-static-files)))
+  (concatenate 'list
+               '(inner-reference-map)
+               (remove 'docutils.transform:resolve-media
+                       (call-next-method))
+               '(resolve-static-files)))
 
 (defmethod docutils:read-document (source (reader reader))
   (when *verbose*
