@@ -143,6 +143,69 @@
   (docutils:part-append "</a>"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; common-lisp-entity
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass common-lisp-entity (docutils.nodes:raw)
+  ((package :initarg :package :initform nil :reader common-lisp-entity-package)
+   (name :initarg :name :reader common-lisp-entity-name)))
+
+(defmethod docutils:visit-node ((write docutils.writer.html:html-writer) (node common-lisp-entity))
+  (docutils:part-append
+   (docutils.writer.html::start-tag node
+                                    "span"
+                                    '(:class "common-lisp-entity")))
+  (when (common-lisp-entity-package node)
+    (docutils:part-append (common-lisp-entity-package node)
+                          ":"))
+  (docutils:part-append (common-lisp-entity-name node)
+                        "</span>"))
+
+(defun parse-common-lisp-entity (str)
+  (ppcre:register-groups-bind (package name) ("^(?:([^:]+):{1,2})?(.+)$" str)
+    (values package name)))
+  
+(defclass common-lisp-variable (common-lisp-entity) ())
+(defclass common-lisp-function (common-lisp-entity) ())
+(defclass common-lisp-macros (common-lisp-entity) ())
+(defclass common-lisp-constant (common-lisp-entity) ())
+(defclass common-lisp-class (common-lisp-entity) ())
+
+(defmacro def-common-lisp-entity-role (name entity-class)
+  (alexandria:with-gensyms (package symbol-name text)
+    `(docutils.parser.rst:def-role ,name (,text)
+       (multiple-value-bind (,package ,symbol-name) (parse-common-lisp-entity ,text)
+         (make-instance ',entity-class
+                        :package ,package
+                        :name ,symbol-name)))))
+
+(def-common-lisp-entity-role var common-lisp-variable)
+(def-common-lisp-entity-role fun common-lisp-function)
+(def-common-lisp-entity-role macro common-lisp-macros)
+(def-common-lisp-entity-role const common-lisp-constant)
+(def-common-lisp-entity-role class common-lisp-class)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; hypespec-ref
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass hyperspec-ref (docutils.nodes:raw)
+  ((spec :initarg :spec :reader hyperspec-ref-spec)))
+
+(defmethod docutils:visit-node ((write docutils.writer.html:html-writer) (node hyperspec-ref))
+  (docutils:part-append
+   (docutils.writer.html::start-tag node
+                                    "a"
+                                    (list :href (clhs-lookup:spec-lookup (hyperspec-ref-spec node))
+                                          :class "common-lisp-entity"))
+   (hyperspec-ref-spec node)
+   "</a>"))
+
+(docutils.parser.rst:def-role hs (spec)
+  (make-instance 'hyperspec-ref
+                 :spec spec))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; reader
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
