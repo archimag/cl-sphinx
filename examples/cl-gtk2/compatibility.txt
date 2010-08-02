@@ -1,4 +1,5 @@
-=============
+.. _compatibility:
+
 Compatibility
 =============
 
@@ -9,7 +10,7 @@ CL-GTK2 requires features from Common Lisp implementations that are beyound ANSI
 * Weak references (weak hash-tables) and finalizers (via Trivial-Garbage)
 * CLOS Metaobject Protocol (via Closer-MOP)
 
-Exact version requirements are written in the :ref:`Installation <installation>` page.
+Exact version requirements are written in the :ref:`installation` page.
 
 CL-GTK2 was tested on following combinations of operating systems and lisp implementations:
 

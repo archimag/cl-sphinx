@@ -6,7 +6,7 @@ CL-GTK2 is a Common Lisp GUI library that provides access to the `Gtk+`_
 cross-platform GUI library in idiomatic Lisp style.
 
 CL-GTK2 should portably work in most modern Lisps that support CFFI and MOP 
-(see :ref:`Compatibility <compatibility>`).
+(see :ref:`compatibility`).
 
 Messages regarding development, feature requests, bug reports should be posted 
 to `cl-gtk2-devel`_ mailing list.
@@ -43,8 +43,8 @@ CL-GTK2 is not yet complete. To do
 Changes
 =======
 
-* 2009.12.30. Version :ref:`0.1.1 <versions#version-0-1-1>` released.
-* 2009.10.24. Version :ref:`0.1 <versions#version-0-1>` released.
+* 2009.12.30. Version :ref:`0.1.1 <version-0.1.1>` released.
+* 2009.10.24. Version :ref:`0.1 <version-0.1>` released.
 * 2009.10.04. Added support for another Lisp compiler: Clozure CL and for
   another OS: Microsoft Windows.
 * 2009.09.07. Rewrote memory management code.

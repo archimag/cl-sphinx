@@ -9,6 +9,8 @@
 
 (defvar *root* nil)
 
+(defvar *root-path* nil)
+
 (defvar *current-document* nil)
 
 (defclass document (docutils.nodes:document)

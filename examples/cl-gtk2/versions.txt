@@ -1,6 +1,9 @@
-========
+.. _versions:
+
 Versions
 ========
+
+.. _version-0.1.1:
 
 Version 0.1.1
 -------------
@@ -49,6 +52,8 @@ Version 0.1.1
   * Correct type definition for GdkNativeWindow when running on Microsoft Windows
   * Ensure that type initializer for GtkTextIter is called at startup
   * Fix definition of foreign C structure for GtkWidget
+
+.. _version-0.1:
 
 Version 0.1 
 -----------

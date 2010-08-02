@@ -29,7 +29,7 @@
 (defun static-href (name)
   (make-relavive-href (format nil "_static/~A" name)
                       (enough-namestring (document-path *current-document*)
-                                         (document-path *root*))))
+                                         *root-path*)))
 
 
 (defclass resolve-static-files (docutils:transform)
