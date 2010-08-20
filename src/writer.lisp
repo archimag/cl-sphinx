@@ -62,6 +62,7 @@
 (defun make-documentation (contents target-dir &key verbose)
   (let ((*verbose* verbose)
         (*inner-reference-map* (make-hash-table :test 'equal))
+        (*api-reference-map* (make-hash-table :test 'equal))
         (*root-path* contents))
     (let* ((*root* (docutils:read-document contents (make-instance 'reader)))
            (root-path (document-path *root*))
@@ -82,4 +83,5 @@
                                                          "~A.~A"
                                                          (pathname-name f)
                                                          (pathname-type f)))
-                                  (fad:copy-file f (target-pahtname f) :overwrite t))))))))
+                                  (fad:copy-file f (target-pahtname f) :overwrite t))))))
+    *api-reference-map*))

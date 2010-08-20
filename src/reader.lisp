@@ -13,7 +13,7 @@
 
 (defmethod docutils:transforms ((reader reader))
   (concatenate 'list
-               '(inner-reference-map)
+               '(inner-reference-map api-reference-map-transform)
                (remove 'docutils.transform:resolve-media
                        (call-next-method))
                '(resolve-static-files)))

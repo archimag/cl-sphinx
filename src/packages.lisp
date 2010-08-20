@@ -8,5 +8,5 @@
 
 (defpackage #:sphinx
   (:use #:cl #:iter)
-  (:import-from #:docutils.parser.rst #:&option #:&content)
+  (:import-from #:docutils.parser.rst #:&option #:&content #:&content-parser)
   (:export #:make-documentation))

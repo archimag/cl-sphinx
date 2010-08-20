@@ -14,6 +14,6 @@
                                      (:file "toctree" :depends-on ("document"))
                                      (:file "ref" :depends-on ("document"))
                                      (:file "resolve" :depends-on ("document"))
-                                     (:file "cl" :depends-on ("packages"))
+                                     (:file "cl" :depends-on ("document"))
                                      (:file "reader" :depends-on ("toctree"))
                                      (:file "writer" :depends-on ("reader" "resolve" "ref" "cl"))))))
