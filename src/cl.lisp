@@ -20,17 +20,6 @@
        ,@body
        (docutils:part-append "</" ,tag ">"))))
 
-
-(defmacro with-div ((node &optional class) &body body)
-  (let ((attrs (if class (list :class class))))
-    `(progn
-       (docutils:part-append (docutils.writer.html::start-tag ,node
-                                                              "div"
-                                                              ',attrs))
-       ,@body
-       (docutils:part-append "</div>"))))
-    
-
 (defvar *api-reference-map* nil)
 
 ;;;; reference
@@ -39,6 +28,10 @@
   ((package :initarg :package :initform nil :reader entity-package)
    (name :initarg :name :reader entity-name)
    (arglist :initarg :arglist :reader entity-arglist)))
+
+(defmethod docutils:allowed-child-p ((parent description) node &optional index)
+  (declare (ignore index))
+  t)
 
 (defun entity-full-name (entity)
   (format nil "~A:~A" (entity-package entity) (entity-name entity)))
@@ -70,7 +63,7 @@
                                 "<a name=\"~A\"></a>"
                                 (entity-id node)))
   (show-description-title node)
-  (with-div (nil "description-body")
+  (with-tag ("div" "description-body")
     (docutils:with-children (ch node)
       (docutils:visit-node write ch)))
   (docutils:part-append "</div>"))
@@ -79,7 +72,7 @@
 (defclass variable-description (description) ())
 
 (defmethod show-description-title ((entity variable-description))
-  (with-div (nil "common-lisp-entity")
+  (with-tag ("div" "common-lisp-entity")
     (docutils:part-append "Variable " (entity-full-name entity))))
 
 (defmacro def-entity-description-directive (directive class)
