@@ -13,31 +13,39 @@
 
 (defclass sphinx-html-writer (docutils.writer.html:html-writer) () )
 
+(defun headline (node h)
+  (docutils:part-append
+   (docutils.writer.html::start-tag node h)
+   (docutils.writer.html::encode (docutils:as-text node)))
+
+  (permalink (or (docutils:attribute node :id)
+                 (docutils:attribute (docutils:parent node) :id))
+             "Permalink to this headline")
+
+  (docutils:part-append "</" h ">"))
+  
+
 (defmethod docutils:visit-node ((writer sphinx-html-writer) (node docutils.nodes:title))
-  (labels ((headline (h)
-             (docutils:part-append
-              (docutils.writer.html::start-tag node h)
-              (docutils.writer.html::encode (docutils:as-text node)))
+  (cond
+    ((typep (docutils:parent node) 'docutils:document)
+     (docutils:with-part (docutils.writer.html:head)
+       (docutils:part-append (format nil
+                                     "<title>~A</title>~%"
+                                     (docutils.writer.html::encode (docutils:as-text node)))))
+     (docutils:with-part (docutils.writer.html:body-pre-docinfo)
+       (headline node "h1")))
+    (t
+     (headline node
+               (format nil
+                       "h~D"
+                       (+ docutils.writer.html::*section-level*
+                          (docutils:setting :initial-header-level writer)))))))
 
-             (permalink (docutils:attribute (docutils:parent node) :id)
-                        "Permalink to this headline")
-
-             (docutils:part-append "</" h ">")))
-    (cond
-      ((typep (docutils:parent node) 'docutils:document)
-       (docutils:with-part (docutils.writer.html:head)
-         (docutils:part-append (format nil
-                                       "<title>~A</title>~%"
-                                       (docutils.writer.html::encode (docutils:as-text node)))))
-       (docutils:with-part (docutils.writer.html:body-pre-docinfo)
-         (headline "h1")))
-      (t
-       (headline (format nil
-                         "h~D"
-                         (+ docutils.writer.html::*section-level*
-                            (docutils:setting :initial-header-level writer))))))))
-                          
-;;  (docutils:part-append "¶"))
+(defmethod docutils:visit-node ((writer sphinx-html-writer) (node docutils.nodes:subtitle))
+  (cond
+    ((typep (docutils:parent node) 'docutils:document)
+     (headline node "h2"))
+    (t (call-next-method))))
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
