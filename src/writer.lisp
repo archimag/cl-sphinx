@@ -7,6 +7,40 @@
 
 (in-package #:sphinx)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; sphinx-writer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass sphinx-html-writer (docutils.writer.html:html-writer) () )
+
+(defmethod docutils:visit-node ((writer sphinx-html-writer) (node docutils.nodes:title))
+  (labels ((headline (h)
+             (docutils:part-append
+              (docutils.writer.html::start-tag node h)
+              (docutils.writer.html::encode (docutils:as-text node)))
+
+             (permalink (docutils:attribute (docutils:parent node) :id)
+                        "Permalink to this headline")
+
+             (docutils:part-append "</" h ">")))
+    (cond
+      ((typep (docutils:parent node) 'docutils:document)
+       (docutils:with-part (docutils.writer.html:head)
+         (docutils:part-append (format nil
+                                       "<title>~A</title>~%"
+                                       (docutils.writer.html::encode (docutils:as-text node)))))
+       (docutils:with-part (docutils.writer.html:body-pre-docinfo)
+         (headline "h1")))
+      (t
+       (headline (format nil
+                         "h~D"
+                         (+ docutils.writer.html::*section-level*
+                            (docutils:setting :initial-header-level writer))))))))
+                          
+;;  (docutils:part-append "¶"))
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun compile-template (path)
   (let ((closure-template:*default-translate-package* (closure-template:make-template-package (gensym)))
         (closure-template.parser.expression::*possible-functions* (cons "staticHref"
@@ -45,7 +79,7 @@
     (let ((content (funcall template
                             (list :title (document-name doc)
                                   :contents (make-contents-plist *root*)
-                                  :content (let ((writer (make-instance 'docutils.writer.html:html-writer)))
+                                  :content (let ((writer (make-instance 'sphinx-html-writer)))
                                              (docutils:visit-node writer doc)
                                              (with-output-to-string (out)
                                                (iter (for part in  '(docutils.writer.html:body-pre-docinfo 
@@ -85,3 +119,6 @@
                                                          (pathname-type f)))
                                   (fad:copy-file f (target-pahtname f) :overwrite t))))))
     *api-reference-map*))
+
+
+;; "¶"

@@ -20,6 +20,15 @@
        ,@body
        (docutils:part-append "</" ,tag ">"))))
 
+(defun permalink (id &optional (title "Permalink to this definition"))
+  (docutils:part-append 
+   (docutils.writer.html::start-tag nil
+                                    "a"
+                                    (list :href (format nil "#~A" id)
+                                          :class "headerlink"
+                                          :title title))
+   "¶</a>"))
+
 (defvar *api-reference-map* nil)
 
 ;;;; reference
@@ -41,39 +50,48 @@
 
 (defgeneric show-description-title (entity)
   (:method (entity)
-    (with-tag ("div")
-      (with-tag ("span" "common-lisp-entity")
+    (with-tag ("span" "common-lisp-entity")
       (docutils:part-append (typecase entity
                               (variable-description "Variable")
                               (function-description "Function")
                               (macro-description "Macro"))
-                            " ")
+                            " "
+                            (entity-full-name entity)))
+    (docutils:part-append " ("
+                          (entity-arglist entity)
+                          ")")
+    (permalink (entity-id entity))))
 
-        (docutils:part-append (entity-full-name entity)))
-      (docutils:part-append " ("
-                            (entity-arglist entity)
-                            ")"))))
+(defmethod show-description-title :around (entity)
+  (docutils:part-append
+   (docutils.writer.html::start-tag nil
+                                    "dl"
+                                    (list :id (entity-id entity))))
+  (with-tag ("dt")
+    (call-next-method))
+  (docutils:part-append "</dl>"))
+                                    
+                                          
       
 
 (defmethod docutils:visit-node ((write docutils.writer.html:html-writer) (node description))
   (docutils:part-append (docutils.writer.html::start-tag node
-                                                         "div"
+                                                         "dl"
                                                          '(:class "entity-description")))
-  (docutils:part-append (format nil
-                                "<a name=\"~A\"></a>"
-                                (entity-id node)))
-  (show-description-title node)
-  (with-tag ("div" "description-body")
-    (docutils:with-children (ch node)
-      (docutils:visit-node write ch)))
-  (docutils:part-append "</div>"))
+ (show-description-title node)
+ (with-tag ("dd")
+   (docutils:with-children (ch node)
+     (docutils:visit-node write ch)))
+  (docutils:part-append "</dl>"))
 
 
 (defclass variable-description (description) ())
 
 (defmethod show-description-title ((entity variable-description))
-  (with-tag ("div" "common-lisp-entity")
-    (docutils:part-append "Variable " (entity-full-name entity))))
+  (with-tag ("span" "common-lisp-entity")
+    (docutils:part-append "Variable "
+                          (entity-full-name entity)))
+  (permalink (entity-id entity)))
 
 (defmacro def-entity-description-directive (directive class)
   `(docutils.parser.rst:def-directive ,directive (parent name &option args &content-parser parser)
