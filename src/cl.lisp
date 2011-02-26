@@ -24,7 +24,9 @@
   (docutils:part-append 
    (docutils.writer.html::start-tag nil
                                     "a"
-                                    (list :href (format nil "#~A" id)
+                                    (list :href (format nil
+                                                        "#~A"
+                                                        (docutils::make-id (docutils::normalise-name id)))
                                           :class "headerlink"
                                           :title title))
    "¶</a>"))
