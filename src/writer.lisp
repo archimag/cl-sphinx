@@ -127,6 +127,3 @@
                                                          (pathname-type f)))
                                   (fad:copy-file f (target-pahtname f) :overwrite t))))))
     *api-reference-map*))
-
-
-;; "¶"
