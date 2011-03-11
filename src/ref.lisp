@@ -44,13 +44,14 @@
         (t (docutils:part-append "Bad section id: "
                                  (inner-reference-id node)))))))
 
-(docutils.parser.rst:def-role ref (text)
-  (or (ppcre:register-groups-bind (title id) ("^([^<]+)\\s+<([^>]+)>$" text)
+(with-sphinx-markup
+  (docutils.parser.rst:def-role ref (text)
+    (or (ppcre:register-groups-bind (title id) ("^([^<]+)\\s+<([^>]+)>$" text)
+          (make-instance 'inner-reference
+                         :title title
+                         :id id))
         (make-instance 'inner-reference
-                       :title title
-                       :id id))
-      (make-instance 'inner-reference
-                     :id text)))
+                       :id text))))
 
 (defclass inner-reference-map (docutils:transform)
   ()

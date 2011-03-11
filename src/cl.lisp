@@ -96,16 +96,17 @@
   (permalink (entity-id entity)))
 
 (defmacro def-entity-description-directive (directive class)
-  `(docutils.parser.rst:def-directive ,directive (parent name &option args &content-parser parser)
-     (let ((paragraph (docutils:make-node 'docutils.nodes:paragraph))
-           (node (multiple-value-bind (package symbol-name) (parse-common-lisp-entity name)
-                   (make-instance ',class
-                                  :package package
-                                  :name symbol-name
-                                  :arglist args))))
-       (docutils:add-child paragraph node)
-       (docutils:add-child parent paragraph)
-       (funcall parser node))))
+  `(with-sphinx-markup
+     (docutils.parser.rst:def-directive ,directive (parent name &option args &content-parser parser)
+       (let ((paragraph (docutils:make-node 'docutils.nodes:paragraph))
+             (node (multiple-value-bind (package symbol-name) (parse-common-lisp-entity name)
+                     (make-instance ',class
+                                    :package package
+                                    :name symbol-name
+                                    :arglist args))))
+         (docutils:add-child paragraph node)
+         (docutils:add-child parent paragraph)
+         (funcall parser node)))))
 
 (defclass function-description (description) ())
 (defclass macro-description (description) ())
@@ -174,12 +175,13 @@
 
 (defmacro def-common-lisp-entity-role (name &optional description-class)
   (alexandria:with-gensyms (package symbol-name text)
-    `(docutils.parser.rst:def-role ,name (,text)
+    `(with-sphinx-markup
+       (docutils.parser.rst:def-role ,name (,text)
          (multiple-value-bind (,package ,symbol-name) (parse-common-lisp-entity ,text)
            (make-instance 'common-lisp-entity
                           :package ,package
                           :name ,symbol-name
-                          :description-class ',description-class)))))
+                          :description-class ',description-class))))))
 
 (def-common-lisp-entity-role var variable-description)
 (def-common-lisp-entity-role fun function-description)
@@ -201,9 +203,10 @@
    (hyperspec-ref-spec node)
    "</a>"))
 
-(docutils.parser.rst:def-role hs (spec)
-  (make-instance 'hyperspec-ref
-                 :spec spec))
+(with-sphinx-markup
+  (docutils.parser.rst:def-role hs (spec)
+    (make-instance 'hyperspec-ref
+                   :spec spec)))
 
 
 
@@ -221,10 +224,11 @@
                                                      (code-block-code node)))
   (docutils:part-append "</div>"))
 
-(docutils.parser.rst:def-directive code-block (parent lang &content content)
-  (let ((node (docutils:make-node 'docutils.nodes:paragraph)))
-    (docutils:add-child node
-                        (make-instance 'code-block
-                                       :lang lang
-                                       :code (docutils::join-strings content #\Newline)))
-    (docutils:add-child parent node)))
+(with-sphinx-markup
+  (docutils.parser.rst:def-directive code-block (parent lang &content content)
+    (let ((node (docutils:make-node 'docutils.nodes:paragraph)))
+      (docutils:add-child node
+                          (make-instance 'code-block
+                                         :lang lang
+                                         :code (docutils::join-strings content #\Newline)))
+      (docutils:add-child parent node))))

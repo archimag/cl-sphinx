@@ -102,28 +102,28 @@
 
 
 (defun make-documentation (contents target-dir &key verbose)
-  (let ((*verbose* verbose)
-        (*inner-reference-map* (make-hash-table :test 'equal))
-        (*api-reference-map* (make-hash-table :test 'equal))
-        (*root-path* contents))
-    (let* ((*root* (docutils:read-document contents (make-instance 'reader)))
-           (root-path (document-path *root*))
-           (target (ensure-directories-exist (fad:pathname-as-directory target-dir)))
-           (template (compile-template root-path)))
-      (flet ((target-pahtname (orig)
-               (ensure-directories-exist (merge-pathnames (enough-namestring orig root-path)
-                                                          target))))
-        (iter (for doc in (cons *root* (document-childs-recursively *root*))) 
-              (write-html doc
-                          (make-pathname :type "html"
-                                         :defaults (target-pahtname (document-path doc)))
-                          template))
-        (fad:walk-directory (make-pathname :directory (pathname-directory (merge-pathnames "_static/" root-path)))
-                            #'(lambda (f)
-                                (unless (string= "template.tmpl"
-                                                 (format nil
-                                                         "~A.~A"
-                                                         (pathname-name f)
-                                                         (pathname-type f)))
-                                  (fad:copy-file f (target-pahtname f) :overwrite t))))))
+  (let* ((*verbose* verbose)
+         (*inner-reference-map* (make-hash-table :test 'equal))
+         (*api-reference-map* (make-hash-table :test 'equal))
+         (*root-path* contents)
+         (*root* (docutils:read-document contents (make-instance 'reader)))
+         (root-path (document-path *root*))
+         (target (ensure-directories-exist (fad:pathname-as-directory target-dir)))
+         (template (compile-template root-path)))
+    (flet ((target-pahtname (orig)
+             (ensure-directories-exist (merge-pathnames (enough-namestring orig root-path)
+                                                        target))))
+      (iter (for doc in (cons *root* (document-childs-recursively *root*))) 
+            (write-html doc
+                        (make-pathname :type "html"
+                                       :defaults (target-pahtname (document-path doc)))
+                        template))
+      (fad:walk-directory (make-pathname :directory (pathname-directory (merge-pathnames "_static/" root-path)))
+                          #'(lambda (f)
+                              (unless (string= "template.tmpl"
+                                               (format nil
+                                                       "~A.~A"
+                                                       (pathname-name f)
+                                                       (pathname-type f)))
+                                (fad:copy-file f (target-pahtname f) :overwrite t)))))
     *api-reference-map*))

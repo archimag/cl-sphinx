@@ -29,3 +29,7 @@
                                                                     (document-path doc))
                                                    (make-instance 'reader))))))
     doc))
+
+(defmethod docutils:read-document :around (source (reader reader))
+  (with-sphinx-markup
+    (call-next-method)))
