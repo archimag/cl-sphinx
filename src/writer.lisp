@@ -51,8 +51,8 @@
 
 (defun compile-template (path)
   (let ((closure-template:*default-translate-package* (closure-template:make-template-package (gensym)))
-        (closure-template.parser.expression::*possible-functions* (cons "staticHref"
-                                                                        closure-template.parser.expression::*possible-functions*)))
+        (closure-template.parser::*possible-functions* (cons "staticHref"
+                                                             closure-template.parser::*possible-functions*)))
     (import 'static-href closure-template:*default-translate-package*)
     (unwind-protect
          (eval (cons 'lambda
