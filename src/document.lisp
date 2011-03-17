@@ -27,9 +27,19 @@
                             (collect child)
                             (collect (document-childs-recursively child)))))
 
-
 (defun document-name (doc)
   (docutils:attribute doc :name))
 
 (defun document-path (doc)
   (docutils:setting :source-path doc))
+
+(defvar *interpreted-roles*
+  (alexandria:copy-hash-table docutils.parser.rst::*interpreted-roles*))
+
+(defvar *directives*
+  (alexandria:copy-hash-table docutils.parser.rst::*directives*))
+
+(defmacro with-sphinx-markup (&body body)
+  `(let ((*interpreted-roles* docutils.parser.rst::*interpreted-roles*)
+         (*directives* docutils.parser.rst::*directives*))
+     ,@body))

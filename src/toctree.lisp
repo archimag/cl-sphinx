@@ -33,15 +33,16 @@
                (docutils:part-append "</ul>"))))
     (impl *current-document*
           (toctree-maxdepth node))))
-                                             
-(docutils.parser.rst:def-directive toctree (parent &option maxdepth &content content)
-  (unless (typep docutils:*document* 'document)
-    (change-class docutils:*document* 'document))
-  (setf (document-childs docutils:*document*)
-        (concatenate 'list
-                     (document-childs docutils:*document*)
-                     content))
-  (docutils:add-child parent
-                      (make-instance 'toctree
-                                     :maxdepth (parse-integer maxdepth))))
+
+(with-sphinx-markup                                             
+  (docutils.parser.rst:def-directive toctree (parent &option maxdepth &content content)
+    (unless (typep docutils:*document* 'document)
+      (change-class docutils:*document* 'document))
+    (setf (document-childs docutils:*document*)
+          (concatenate 'list
+                       (document-childs docutils:*document*)
+                       content))
+    (docutils:add-child parent
+                        (make-instance 'toctree
+                                       :maxdepth (parse-integer maxdepth)))))
                               
