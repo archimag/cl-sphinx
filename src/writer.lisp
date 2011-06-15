@@ -50,19 +50,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun compile-template (path)
-  (let ((closure-template:*default-translate-package* (closure-template:make-template-package (gensym)))
-        (closure-template.parser::*possible-functions* (cons "staticHref"
-                                                             closure-template.parser::*possible-functions*)))
-    (import 'static-href closure-template:*default-translate-package*)
+  (let ((closure-template:*default-closure-template-package* (closure-template:ensure-ttable-package (gensym)))
+        (closure-template.parser::*possible-functions* (cons "staticHref" closure-template.parser::*possible-functions*))
+        (closure-template::*user-functions* '(("STATIC-HREF" . static-href))))
     (unwind-protect
-         (eval (cons 'lambda
-                     (cddr (closure-template:translate-template
-                            :common-lisp-backend
-                            (format nil 
-                                    "{template finalizePage}~A{/template}"
-                                    (alexandria:read-file-into-string (merge-pathnames "_static/template.tmpl"
-                                                                                       path)))))))
-      (delete-package closure-template:*default-translate-package*))))
+         (progn
+           (closure-template:compile-template
+            :common-lisp-backend
+            (format nil 
+                    "{template finalizePage}~A{/template}"
+                    (alexandria:read-file-into-string (merge-pathnames "_static/template.tmpl"
+                                                                       path))))
+            (closure-template:ttable-find-template             
+             (closure-template:package-ttable  closure-template:*default-closure-template-package*)
+             "FINALIZE-PAGE"))
+      (delete-package closure-template:*default-closure-template-package*))))
 
 (defun make-contents-plist (doc)
   (iter (for child in (document-childs doc))
@@ -84,17 +86,19 @@
   (when *verbose*
     (format *trace-output* "Write ~A~&" path))
   (let ((*current-document* doc))
-    (let ((content (funcall template
-                            (list :title (document-name doc)
-                                  :contents (make-contents-plist *root*)
-                                  :content (let ((writer (make-instance 'sphinx-html-writer)))
-                                             (docutils:visit-node writer doc)
-                                             (with-output-to-string (out)
-                                               (iter (for part in  '(docutils.writer.html:body-pre-docinfo 
-                                                                     docutils.writer.html:docinfo
-                                                                     docutils.writer.html:body))
-                                                     (docutils:write-part writer part out))
-                                               (format out "</div>")))))))
+    (let ((content (with-output-to-string (out)
+                     (funcall template
+                              (list :title (document-name doc)
+                                    :contents (make-contents-plist *root*)
+                                    :content (let ((writer (make-instance 'sphinx-html-writer)))
+                                               (docutils:visit-node writer doc)
+                                               (with-output-to-string (out)
+                                                 (iter (for part in  '(docutils.writer.html:body-pre-docinfo 
+                                                                       docutils.writer.html:docinfo
+                                                                       docutils.writer.html:body))
+                                                       (docutils:write-part writer part out))
+                                                 (format out "</div>"))))
+                              out))))
       (alexandria:write-string-into-file content
                                          path
                                          :if-exists :supersede
